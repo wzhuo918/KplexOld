@@ -137,6 +137,7 @@ public class LocalModeOld {
 			}
 			oneLeap.put(k, adj);
 		}
+		reader.close();
 		// 将节点编号排序，为了使得各个reduce处理不同的部分从而并行化
 		// 通过取余判定
 		Collections.sort(nodeSet);
@@ -275,19 +276,8 @@ public class LocalModeOld {
 		computeOneleapData(args[0]);
 	}
 	public static void init(String[] args) throws NumberFormatException, IOException{
-		FileReader fr = new FileReader(new File("/home/youli/CliqueHadoop/kplexnew_COMMON.txt"));
-		BufferedReader bfr = new BufferedReader(fr);
-		// 提取出所有的pick节点
-		String record = "";
-		pick.clear();
-		while ((record = bfr.readLine()) != null) {
-			String[] adjInfos = record.split(" ");
-			for (int i = 1; i < adjInfos.length; i++)
-				pick.add(Integer.valueOf(adjInfos[i]));
-		}
-		bfr.close();
-		ps=new PrintStream(new File(args[1]));
-		System.setOut(ps);
+//		ps=new PrintStream(new File(args[1]));
+//		System.setOut(ps);
 		reduceNumber = 132;
 		quasiCliqueSize = 5;
 		k_plex = 2;

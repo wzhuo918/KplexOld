@@ -1,19 +1,19 @@
-package search;
+package kplexold;
  
 import java.util.HashMap;
 
 public class SubGraph {
 	private HashMap<Integer,Integer> candidate;
-	private HashMap<Integer,Integer> nouse;
+	private HashMap<Integer,Pair> not;
 	private HashMap<Integer,Integer> result;
 	public SubGraph(int sizea,int sizeb)
 	{
 
 	}
 	public SubGraph(HashMap<Integer, Integer> tmpcand,
-			HashMap<Integer, Integer> tmpres, HashMap<Integer, Integer> tmpnot) {
+			HashMap<Integer, Integer> tmpres, HashMap<Integer, Pair> tmpnot) {
 		this.candidate = tmpcand;
-		this.nouse = tmpnot;
+		this.not = tmpnot;
 		this.result = tmpres;
 	}
 
@@ -23,11 +23,11 @@ public class SubGraph {
 	public void setCandidate(HashMap<Integer, Integer> candidate) {
 		this.candidate = candidate;
 	}
-	public HashMap<Integer, Integer> getNouse() {
-		return nouse;
+	public HashMap<Integer, Pair> getNot() {
+		return not;
 	}
-	public void setNouse(HashMap<Integer, Integer> nouse) {
-		this.nouse = nouse;
+	public void setNot(HashMap<Integer, Pair> nouse) {
+		this.not = nouse;
 	}
 	public HashMap<Integer, Integer> getResult() {
 		return result;

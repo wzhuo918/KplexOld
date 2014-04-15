@@ -229,7 +229,7 @@ public class MyOptimize {
 		}
 		if (candidate.size() + 1 < quasiCliqueSize)
 			return null;
-		SubGraph init = new SubGraph(candidate.size(), not.size());
+		SubGraph init = new SubGraph();
 		init.setCandidate(candidate);
 		init.setNot(not);
 		init.setResult(resultKplex);

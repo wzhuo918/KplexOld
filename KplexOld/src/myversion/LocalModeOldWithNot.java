@@ -94,7 +94,7 @@ public class LocalModeOldWithNot {
 				}
 				if (candidate.size() + 1 < quasiCliqueSize)
 					continue;
-				SubGraph init = new SubGraph(candidate.size(), not.size());
+				SubGraph init = new SubGraph();
 				init.setCandidate(candidate);
 				init.setNot(not);
 				init.setResult(resultKplex);

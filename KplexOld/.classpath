@@ -48,5 +48,6 @@
 	<classpathentry kind="lib" path="/home/youli/workspace/lib/servlet-api-2.5-20081211.jar"/>
 	<classpathentry kind="lib" path="/home/youli/workspace/lib/slf4j-api-1.4.3.jar"/>
 	<classpathentry kind="lib" path="/home/youli/workspace/lib/slf4j-log4j12-1.4.3.jar"/>
+	<classpathentry kind="lib" path="lib/ganymed-ssh2-build210.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

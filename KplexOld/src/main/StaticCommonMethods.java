@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.Map.Entry;
@@ -126,18 +127,22 @@ public class StaticCommonMethods {
 		HashMap<Integer, Integer> curNot = top.getNot();
 		HashMap<Integer, Integer> curRes = top.getResult();
 		HashMap<Integer, Integer> connnot = new HashMap<Integer, Integer>();
-		HashSet<Integer> conncand = getConnSet(curCand, curRes, connnot, curNot);
-		boolean isCritEmpty = isCritEmpth(curRes);
-		HashMap<Integer, Integer> prunableNot = new HashMap<Integer, Integer>();
-		if (!isCritEmpty) {
-			try {
-				prunableNot = getPrunableNot(connnot);
-			} catch (CloneNotSupportedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			updateNotCdeg(prunableNot, curCand);
+		Set<Integer> conncand;
+		boolean isCritEmpty = true;
+		if (curRes.size() >= k_plex) {
+			conncand = getConnSet(curCand, curRes, connnot, curNot);
+			isCritEmpty = isCritEmpth(curRes);
+		} else {
+			conncand = curCand.keySet();
+			connnot = curNot;
 		}
+		isCritEmpty = isCritEmpth(curRes);
+		HashMap<Integer, Integer> prunableNot;
+//		if (!isCritEmpty) {
+			prunableNot = getPrunableNot(connnot);
+			updateNotCdeg(prunableNot, curCand);
+//		} else
+//			prunableNot = new HashMap<Integer, Integer>();
 		Iterator<Integer> iter = conncand.iterator();
 		while (curRes.size() + curCand.size() >= quasiCliqueSize) {
 			if (conncand.isEmpty()) {
@@ -154,37 +159,59 @@ public class StaticCommonMethods {
 			}
 			Integer vp = null;
 			// 选择分裂点算法
-			if (isCritEmpty || prunableNot.isEmpty()) {
-				vp = iter.next();
-				iter.remove();
-			} else {
-				int minpoint = 0, mindeg = curCand.size() + 10000;
-				for (Entry<Integer, Integer> en : prunableNot.entrySet()) {
-					if (en.getValue() < mindeg) {
-						mindeg = en.getValue();
-						minpoint = en.getKey();
+			if(!isCritEmpty){
+				if (!prunableNot.isEmpty()) {
+					int minpoint = 0, mindeg = curCand.size() + 10000;
+					for (Entry<Integer, Integer> en : prunableNot
+							.entrySet()) {
+						if (en.getValue() < mindeg) {
+							mindeg = en.getValue();
+							minpoint = en.getKey();
+						}
 					}
+					if (mindeg == 0)
+						vp = -1;
+					else {
+						HashSet<Integer> set = oneLeap.get(minpoint);
+						iter = conncand.iterator();
+						while (iter.hasNext()) {
+							Integer po = iter.next();
+							if (!set.contains(po)) {
+								vp = po;
+								break;
+							}
+						}
+					}
+					
+				} else {
+
+					vp = iter.next();
 				}
-				if (mindeg == 0)
-					vp = -1;
-				else {
-					HashSet<Integer> set = oneLeap.get(minpoint);
-					iter = conncand.iterator();
-					while (iter.hasNext()) {
-						Integer po = iter.next();
-						if (!set.contains(po)) {
-							vp = po;
-							iter.remove();
+				if (vp == -1)// 剪枝
+					break;
+			}else{
+				if(!prunableNot.isEmpty()){
+					boolean dup = false;
+					for(Integer v:prunableNot.values())
+					{
+						if(v==0){
+							dup = true;
 							break;
 						}
 					}
+					if(dup)
+						break;
 				}
+				iter = conncand.iterator();
+				vp = iter.next();
+				
 			}
-			if (vp == -1)// 剪枝
-				break;
+			
 
 			int counter = curCand.get(vp);
-			curCand.remove(vp);
+			iter.remove();
+			if (curRes.size() >= k_plex)
+				curCand.remove(vp);
 			// 从候选集中删除一个节点以后需要更新当前prunable not集中点的cdeg
 			if (!isCritEmpty && !prunableNot.isEmpty()) {
 				HashSet<Integer> set = oneLeap.get(vp);
@@ -265,11 +292,9 @@ public class StaticCommonMethods {
 	 * 
 	 * @param connnot
 	 * @return
-	 * @throws CloneNotSupportedException
 	 */
 	public static HashMap<Integer, Integer> getPrunableNot(
-			HashMap<Integer, Integer> connnot)
-			throws CloneNotSupportedException {
+			HashMap<Integer, Integer> connnot){
 		HashMap<Integer, Integer> re = new HashMap<Integer, Integer>();
 		for (Entry<Integer, Integer> en : connnot.entrySet()) {
 			if (en.getValue() == 0)

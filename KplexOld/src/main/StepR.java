@@ -122,7 +122,8 @@ public class StepR {
 		@Override
 		protected void cleanup(Context context) throws IOException,
 				InterruptedException {
-			writer.close();
+			if(writer!=null)
+				writer.close();
 			File prevfile = new File(RunOver.spillPath + reduceid);
 			if (prevfile.exists() && prevfile.length() > 0) {
 				if (time < T) {
@@ -181,6 +182,9 @@ public class StepR {
 					treesize++;
 					while (time < T && !stack.isEmpty()) {
 						time += computeOneSubGraph(stack.pop(), true, context);
+					}
+					while(!stack.isEmpty()){
+						spillToDisk(writer,stack.pop());
 					}
 				} else {
 					writer.write(sStr);

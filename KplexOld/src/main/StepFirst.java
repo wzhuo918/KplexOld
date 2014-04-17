@@ -100,7 +100,8 @@ public class StepFirst {
 		@Override
 		protected void cleanup(Context context) throws IOException,
 				InterruptedException {
-			writer.close();
+			if(writer!=null)
+				writer.close();
 			File prevfile = new File(RunOver.spillPath + reduceid);
 			if (prevfile.exists() && prevfile.length() > 0) {
 				if (time < T) {

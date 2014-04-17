@@ -116,7 +116,7 @@ public class RunOver {
 				long t12 = System.currentTimeMillis();
 				all += (t12 - t11);
 				this.wait(5000);
-				thisphasesize += (long) RemoteSSH.getRemoteFilesSize();
+				thisphasesize = (long) RemoteSSH.getRemoteFilesSize();
 				emitfilesize += thisphasesize;
 			}
 		}

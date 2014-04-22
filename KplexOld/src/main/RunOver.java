@@ -18,7 +18,7 @@ public class RunOver {
 	public static final String masterhost = "test164:19000";
 	public static final String spillPath = "/home/"+RunOver.usr+"/CliqueHadoop/outresult/bkpb/";
 	public static final String hadoophome = "/home/"+usr+"/hadoopyouli/";
-	public static final boolean spillRes = true;
+	public static final boolean spillRes = false;
 	int arglen;
 	int pre = 0;
 	int reducenum;

@@ -123,6 +123,7 @@ public class StaticCommonMethods {
 		// 将节点编号排序，为了使得各个reduce处理不同的部分从而并行化
 		// 通过取余判定
 		long t1 = System.currentTimeMillis();
+		long tmp = t1;
 		HashMap<Integer, Integer> curCand = top.getCandidate();
 		HashMap<Integer, Integer> curNot = top.getNot();
 		HashMap<Integer, Integer> curRes = top.getResult();
@@ -148,8 +149,10 @@ public class StaticCommonMethods {
 			if (conncand.isEmpty()) {
 				if (connnot.isEmpty()) {
 					if (curRes.size() >= quasiCliqueSize) {
-						String re = curRes.keySet().toString();
-						context.write(new Text(re.substring(1, re.length() - 1)),NullWritable.get());
+						if(RunOver.spillRes){
+							String re = curRes.keySet().toString();
+							context.write(new Text(re.substring(1, re.length() - 1)),NullWritable.get());
+						}
 						cliquenum++;
 					}
 				} else {
@@ -256,6 +259,12 @@ public class StaticCommonMethods {
 			connnot.put(vp, counter);
 			if (counter == 0) {
 				prunableNot.put(vp, countNotAdj(curCand, vp));
+			}
+			tmp = System.currentTimeMillis();
+			
+			if(tmp-t1+time>T && conncand.size()>N){
+				spillToDisk(writer,top);
+				break;
 			}
 		}
 		long t2 = System.currentTimeMillis();

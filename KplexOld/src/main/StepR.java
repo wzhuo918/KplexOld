@@ -42,28 +42,32 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 public class StepR {
 	public static class StepRMapper extends
-			Mapper<LongWritable, Text, IntWritable, Text> {
+			Mapper<LongWritable, Text, PairTypeInt, Text> {
+		PairTypeInt k = new PairTypeInt();
 		@Override
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String str = value.toString();
 			int p = Integer.parseInt(str.substring(0, str.indexOf(" ")));
+			k.setA(p); 
+			
 			String v = str.substring(str.indexOf("%") + 1, str.length());
-			context.write(new IntWritable(p), new Text(v));
+			k.setB(Integer.parseInt(str.substring(str.indexOf(" ")+1,str.indexOf("%"))));
+			context.write(k, new Text(v));
 		}
 	}
 
 	// 平均分配到各个计算节点之上,每个reduce保存一份“一跳”
 	public static class oneLeapFinderPartitioner extends
-			Partitioner<IntWritable, Text> {
+			Partitioner<PairTypeInt, Text> {
 		@Override
-		public int getPartition(IntWritable key, Text value, int num) {
-			return (key.get()) % num;
+		public int getPartition(PairTypeInt key, Text value, int num) {
+			return (key.getA()) % num;
 		}
 	}
 
 	public static class StepRReducer extends
-			Reducer<IntWritable, Text, Text, NullWritable> {
+			Reducer<PairTypeInt, Text, Text, NullWritable> {
 
 		@Override
 		// 读入pick和split的值
@@ -101,6 +105,7 @@ public class StepR {
 		}
 
 		public static void readInOneLeapData(String file) throws IOException {
+			long t1 = System.currentTimeMillis();
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			String line;
 			StringTokenizer stk;
@@ -115,6 +120,8 @@ public class StepR {
 				oneLeap.put(k, adj);
 			}
 			reader.close();
+			long t2 = System.currentTimeMillis();
+			System.out.println("read edgetime "+(t2-t1));
 		}
 
 		@Override
@@ -122,9 +129,11 @@ public class StepR {
 				InterruptedException {
 			if(writer!=null)
 				writer.close();
+			System.out.println("in cleanup");
 			File prevfile = new File(RunOver.spillPath + reduceid);
 			if (prevfile.exists() && prevfile.length() > 0) {
 				if (time < T) {
+					System.out.println(prevfile+" is not empty and time is not out ");
 					File curFile = new File(RunOver.spillPath + reduceid + "#");
 					BufferedReader reader = new BufferedReader(new FileReader(
 							prevfile));
@@ -140,8 +149,6 @@ public class StepR {
 						while (!stack.isEmpty() && time < T) {
 							time += computeOneSubGraph(stack.pop(), false,
 									context);
-							if (time >= T)
-								break;
 						}
 					}
 					while (!stack.isEmpty()) {
@@ -152,13 +159,17 @@ public class StepR {
 					}
 					newWriter.close();
 					if (curFile.exists() && curFile.length() == 0) {
-						curFile.delete();
+						System.out.println(curFile+" is empty and is " +curFile.delete()+" deleted");
 					}
 					reader.close();
-					prevfile.delete();
+					System.out.println(prevfile+" is empty and is " +prevfile.delete()+" deleted");
+				}else{
+					System.out.println(prevfile+" is not empty but time is out ");
 				}
 			} else if (prevfile.exists()) {
-				prevfile.delete();
+				System.out.println(prevfile+"is empty and is "+prevfile.delete()+" deleted");
+			} else {
+				System.out.println(prevfile+ " does not exist");
 			}
 			System.out.println("kplex num=" + cliquenum + "========" + time
 					/ 1000 + " s, treesize=" + treesize);
@@ -166,10 +177,11 @@ public class StepR {
 		}
 
 		@Override
-		protected void reduce(IntWritable key, Iterable<Text> values,
+		protected void reduce(PairTypeInt key, Iterable<Text> values,
 				Context context) throws IOException, InterruptedException {
-			reduceid = key.get();
+			
 			if (writer == null) {
+				reduceid = key.getA();
 				writer = new FileWriter(RunOver.spillPath + reduceid);
 			}
 			for (Text t : values) {
@@ -186,7 +198,7 @@ public class StepR {
 						spillToDisk(writer,stack.pop());
 					}
 				} else {
-					writer.write(sStr);
+					writer.write(((count++)%reduceNumber)+" 0%"+sStr);
 					writer.write("\n");
 				}
 			}

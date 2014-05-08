@@ -65,7 +65,7 @@ public class RunOver {
 		job.setPartitionerClass(StepR.oneLeapFinderPartitioner.class);
 		job.setReducerClass(StepR.StepRReducer.class);// 换Reducer
 
-		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputKeyClass(PairTypeInt.class);
 		job.setMapOutputValueClass(Text.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(NullWritable.class);

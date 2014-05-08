@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.StringTokenizer;
 
 import myversion.SubGraph;
 
@@ -37,13 +38,13 @@ public class StepFirst {
 			
 			bfr3.close();
 		}
-
+		Text empty = new Text();
 		@Override
 		// 若第一跳相同，则是聚起来的
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			for (int i = 0; i < reduceNumber; i++) {
-				context.write(new IntWritable(i), value);
+				context.write(new IntWritable(i), empty);
 			}
 		}
 	}
@@ -72,7 +73,7 @@ public class StepFirst {
 			pick.clear();
 			while ((record = bfr.readLine()) != null) {
 				String[] adjInfos = record.split(" ");
-				for (int i = 1; i < adjInfos.length; i++)
+				for (int i = 0; i < adjInfos.length; i++)
 					pick.add(Integer.valueOf(adjInfos[i]));
 			}
 			bfr.close();
@@ -92,6 +93,7 @@ public class StepFirst {
 				graphFile = bfr3.readLine();
 			bfr3.close();
 			count = new Random().nextInt(reduceNumber);
+			readInOneLeapData(graphFile);
 		}
 
 		@Override
@@ -99,6 +101,7 @@ public class StepFirst {
 				InterruptedException {
 			if(writer!=null)
 				writer.close();
+			System.out.println("in clean up");
 			File prevfile = new File(RunOver.spillPath + reduceid);
 			if (prevfile.exists() && prevfile.length() > 0) {
 				if (time < T) {
@@ -117,8 +120,6 @@ public class StepFirst {
 						while (!stack.isEmpty() && time < T) {
 							time += computeOneSubGraph(stack.pop(), false,
 									context);
-							if (time >= T)
-								break;
 						}
 					}
 					while (!stack.isEmpty()) {
@@ -141,11 +142,28 @@ public class StepFirst {
 					/ 1000 + " s, treesize=" + treesize);
 			super.cleanup(context);
 		}
-
+		public static void readInOneLeapData(String file) throws IOException {
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line;
+			StringTokenizer stk;
+			while ((line = reader.readLine()) != null) {
+				stk = new StringTokenizer(line);
+				int k = Integer.parseInt(stk.nextToken());
+				HashSet<Integer> adj = new HashSet<Integer>();
+				nodeSet.add(k);
+				while (stk.hasMoreTokens()) {
+					Integer v = Integer.parseInt(stk.nextToken());
+					if(k==v)
+						continue;
+					adj.add(v);
+				}
+				oneLeap.put(k, adj);
+			}
+			reader.close();
+		}
 		@Override
 		protected void reduce(IntWritable key, Iterable<Text> values,
 				Context context) throws IOException, InterruptedException {
-			nodeSet.clear();
 			// reduce的编号，方便将所有节点分散到各个reduce进行计算
 			int part = key.get();
 			if (writer == null) {
@@ -154,23 +172,23 @@ public class StepFirst {
 			}
 			for (Text t : values)// 获得一跳信息
 			{
-				String val = t.toString();
-				String[] oneleap = val.split(" ");
-				int node = Integer.valueOf(oneleap[0]);
-				nodeSet.add(node);
-				HashSet<Integer> adj = new HashSet<Integer>(80);
-				for (int i = 1; i < oneleap.length; i++) {
-					adj.add(Integer.valueOf(oneleap[i]));
-				}
-				oneLeap.put(node, adj);
+//				String val = t.toString();
+//				String[] oneleap = val.split(" ");
+//				int node = Integer.valueOf(oneleap[0]);
+//				nodeSet.add(node);
+//				HashSet<Integer> adj = new HashSet<Integer>(oneleap.length-1);
+//				for (int i = 1; i < oneleap.length; i++) {
+//					adj.add(Integer.valueOf(oneleap[i]));
+//				}
+//				oneLeap.put(node, adj);
 			}
-
+			
 			// 排序后，每个reduce只处理对应节点
 			for (Integer current : nodeSet) {
 				// if(current==19){
 				if (current % reduceNumber == reduceid) {
-//					if(pick.contains(current)){
-					if(true){
+					if(pick.contains(current)){
+//					if(true){
 						SubGraph init = initSize1SubGraph(current);
 						if (init == null)
 							continue;

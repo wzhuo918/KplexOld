@@ -213,7 +213,7 @@ public class StaticCommonMethods {
 
 			int counter = curCand.get(vp);
 			iter.remove();
-			if (curRes.size() >= k_plex)
+//			if (curRes.size() >= k_plex)
 				curCand.remove(vp);
 			// 从候选集中删除一个节点以后需要更新当前prunable not集中点的cdeg
 			if (!isCritEmpty && !prunableNot.isEmpty()) {
@@ -249,10 +249,10 @@ public class StaticCommonMethods {
 			updatecount(tmpnot, vp);
 			if (tmpcand.size() + tmpres.size() >= quasiCliqueSize) {
 				SubGraph sub = new SubGraph(tmpcand, tmpres, tmpnot);
-				if(spillBig&&tmpcand.size()>N){
+				if(spillBig&&(tmpcand.size()>N||stack.size()>1000000)){
 					spillToDisk(writer,sub);
 				}else
-				stack.add(sub);
+					stack.add(sub);
 				treesize++;
 			}
 			curNot.put(vp, counter);
@@ -262,7 +262,7 @@ public class StaticCommonMethods {
 			}
 			tmp = System.currentTimeMillis();
 			
-			if(tmp-t1+time>T && conncand.size()>N){
+			if(tmp-t1+time>=T && conncand.size()>N){
 				spillToDisk(writer,top);
 				break;
 			}
